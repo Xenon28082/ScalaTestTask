@@ -1,6 +1,6 @@
 import Exceptions.{IncorrectArgsCountError, InfiniteRecursionError}
 
-import java.io.{BufferedWriter, File, FileWriter}
+import java.io.{BufferedWriter, File, FileNotFoundException, FileWriter}
 import java.util
 import java.util.Scanner
 import scala.Array.ofDim
@@ -14,10 +14,14 @@ object Main {
   def main(args: Array[String]): Unit = {
 
     def getArraySize(fileName: String) = {
-      val file: File = new File(fileName)
-      val scanner: Scanner = new Scanner(file)
-      val firstString = scanner.nextLine()
-      firstString
+      try {
+        val file: File = new File(fileName)
+        val scanner: Scanner = new Scanner(file)
+        val firstString = scanner.nextLine()
+        firstString
+      } catch {
+        case FileNotFoundException => throw new Exception("File not Found")
+      }
     }
 
     def getMainTable(fileName: String, xSize: Int, ySize: Int) = {
@@ -130,22 +134,28 @@ object Main {
     }
 
     def calculateExpressions(array: Array[Array[String]]) = {
-      var parser = new ExpressionParser()
-      for (i <- 0 to array.length - 1) {
-        for (j <- 0 to array(i).length - 1) {
-          var sb: StringBuilder = new StringBuilder()
-          if (array(i)(j)(0) == '=') {
-            for (k <- 1 to array(i)(j).length - 1) {
-              sb.append(array(i)(j)(k))
+      try {
+        var parser = new ExpressionParser()
+        for (i <- 0 to array.length - 1) {
+          for (j <- 0 to array(i).length - 1) {
+            var sb: StringBuilder = new StringBuilder()
+            if (array(i)(j)(0) == '=') {
+              for (k <- 1 to array(i)(j).length - 1) {
+                sb.append(array(i)(j)(k))
+              }
+              array(i)(j) = calc(parser.parse(sb.toString())).toString
             }
-            array(i)(j) = calc(parser.parse(sb.toString())).toString
-          }
-          if (array(i)(j)(0) == '\'') {
-            for (k <- 1 to array(i)(j).length - 1) {
-              sb.append(array(i)(j)(k))
+            if (array(i)(j)(0) == '\'') {
+              for (k <- 1 to array(i)(j).length - 1) {
+                sb.append(array(i)(j)(k))
+              }
+              array(i)(j) = sb.toString()
             }
-            array(i)(j) = sb.toString()
           }
+        }
+      } catch {
+        case IndexOutOfBoundsException => {
+          throw new Exception("Try to refer to cell that don't exists")
         }
       }
     }
@@ -185,7 +195,7 @@ object Main {
 
     println(s"args count - ${args.length}")
 
-    val parser:ExpressionParser = new ExpressionParser()
+    val parser: ExpressionParser = new ExpressionParser()
     println(parser.parse("7+5*2").toString())
 
     args.length match {
